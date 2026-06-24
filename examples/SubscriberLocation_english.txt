@@ -1,0 +1,17 @@
+Function: DetermineSubscriberLocationFromULI
+
+Input: UserLocationInfo (OctetString), SgsnMccMnc (String)
+Output: subscriberLocation (String)
+
+Set subscriberLocation to Not Available
+
+If UserLocationInfo is present
+    Decode the UserLocationInfo AVP
+    Extract the MCC
+    Extract the MNC
+    Extract the TAC
+    Combine MCC and MNC to form a PLMN value
+    Set subscriberLocation to Unknown
+    Check against TAC reference table TACLocationMapping using tmpTAC column TAC
+    If a matching TAC is found:
+        Set subscriberLocation to Matched and exit

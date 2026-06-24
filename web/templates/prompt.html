@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Template - CHA Dynamic Function Compiler</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #333; line-height: 1.6; }
+        .header { background: #1a237e; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 1.4rem; font-weight: 500; }
+        .header nav a { color: #bbdefb; text-decoration: none; margin-left: 1.5rem; font-size: 0.95rem; }
+        .header nav a:hover { color: white; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+        h2 { color: #1a237e; margin: 2rem 0 1rem; font-size: 1.3rem; border-bottom: 2px solid #e8eaf6; padding-bottom: 0.5rem; }
+        h3 { color: #283593; margin: 1.5rem 0 0.75rem; font-size: 1.05rem; }
+        p { margin: 0.5rem 0; }
+        .prompt-box { background: #263238; color: #eeffff; padding: 1.25rem; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; position: relative; margin: 1rem 0; max-height: 600px; overflow-y: auto; }
+        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: #455a64; color: white; border: none; padding: 0.3rem 0.7rem; border-radius: 3px; cursor: pointer; font-size: 0.75rem; }
+        .copy-btn:hover { background: #607d8b; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin: 1.5rem 0; overflow: hidden; }
+        .card-header { background: #e8eaf6; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.9rem; color: #1a237e; }
+        .card-body { padding: 1rem; }
+        .tip { background: #e3f2fd; border-left: 4px solid #1565c0; padding: 0.75rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.9rem; }
+        .workflow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; font-size: 0.9rem; }
+        .workflow .step { background: #1a237e; color: white; padding: 0.4rem 0.8rem; border-radius: 16px; font-size: 0.8rem; }
+        .workflow .arrow { color: #1a237e; font-weight: bold; }
+        ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+        li { margin: 0.3rem 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#9881; AI Prompt Template</h1>
+        <nav>
+            <a href="/">Compiler</a>
+            <a href="/docs">Documentation</a>
+            <a href="/prompt">AI Prompt Template</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h2>How to Use Any GenAI to Generate CHA Dynamic Functions</h2>
+
+        <div class="workflow">
+            <span class="step">1. Copy Prompt</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">2. Give to AI + Your Requirement</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">3. Paste AI Output into Compiler</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">4. Download ZIP</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">5. Import to CHA</span>
+        </div>
+
+        <div class="tip">
+            <strong>Works with:</strong> ChatGPT, Claude, Gemini, Amazon Q, GitHub Copilot, or any LLM.
+            Copy the prompt below, add your requirement at the end, and paste the AI's response directly into the <a href="/">Compiler tool</a>.
+        </div>
+
+        <h2>&#128203; The Prompt (Copy This)</h2>
+
+        <div class="card">
+            <div class="card-header">Complete Prompt Template</div>
+            <div class="card-body" style="padding:0">
+                <div class="prompt-box" id="mainPrompt">
+<button class="copy-btn" onclick="copyPrompt()">&#128203; Copy</button>
+You are a telecom charging engineer writing Ericsson CHA Dynamic Function rules.
+
+Generate the rule definition in the EXACT format below for my requirement.
+
+FORMAT RULES:
+1. First line: "Function: &lt;FunctionName&gt;" (no spaces in name, use CamelCase)
+2. Parameters: "Input: &lt;name&gt; (&lt;type&gt;), &lt;name2&gt; (&lt;type&gt;)" on one line
+3. Output: "Output: &lt;name&gt; (&lt;type&gt;)"
+4. Internal (if needed): "Internal: &lt;name&gt; (&lt;type&gt;)"
+5. Rules: One rule per line starting with "If"
+6. Conditions use: "is", "equals", "is not"
+7. Multiple conditions: "and" between them on same line
+8. Actions: "then set &lt;target&gt; to &lt;value&gt;"
+9. Exit: append "and exit" to stop processing
+10. Default: "Default set &lt;target&gt; to &lt;value&gt;"
+
+AVAILABLE DATA TYPES:
+String, Integer, Long, Boolean, StringList, OctetString, DateTime, Measurement
+
+CONDITION PATTERNS:
+- "If &lt;variable&gt; is &lt;value&gt; then ..."
+- "If &lt;variable&gt; is not &lt;value&gt; then ..."
+- "If &lt;var1&gt; is &lt;val1&gt; and &lt;var2&gt; is &lt;val2&gt; then ..."
+- "If &lt;variable&gt; is present" (existence check)
+
+FOR COMPLEX OPERATIONS:
+- "Decode the &lt;AVP&gt;" (converts OctetString to String)
+- "Split &lt;source&gt; by &lt;delimiter&gt;" (splits string into list)
+- "Extract the &lt;field&gt;" (substring extraction)
+- "Combine &lt;x&gt; and &lt;y&gt; to form &lt;z&gt;" (concatenation)
+- For COBA table lookups use EXACTLY this format:
+  "Check against table &lt;TableName&gt; using &lt;keyParam&gt; column &lt;columnName&gt;"
+  Where:
+    - TableName = the globalListSpecification name in CHA
+    - keyParam = the internal/input parameter holding the lookup key value
+    - columnName = the column in the COBA table to search
+  The user will provide exact table names via a form in the tool.
+
+EXAMPLE OUTPUT:
+---
+Function: DetermineServiceScenario
+
+Input: serviceType (Long), roleOfNode (Integer)
+Output: serviceScenario (String)
+
+If serviceType is 6 then set serviceScenario to Forwarding and exit
+If roleOfNode is 0 then set serviceScenario to MobileOriginating and exit
+If roleOfNode is 1 then set serviceScenario to MobileTerminating and exit
+Default set serviceScenario to Unknown
+---
+
+IMPORTANT: Output ONLY the function definition text. No explanations, no markdown, no code blocks.
+
+MY REQUIREMENT:
+[PASTE YOUR REQUIREMENT HERE]</div>
+            </div>
+        </div>
+
+        <h2>&#127919; Usage Examples</h2>
+
+        <div class="card">
+            <div class="card-header">Example 1: Simple Value Mapping</div>
+            <div class="card-body">
+                <p><strong>Add this to the end of the prompt:</strong></p>
+                <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
+Map Radio Access Technology code to network type string.
+Input: ratType (Integer). Output: networkType (String).
+Mappings: 1=UTRAN, 2=GERAN, 3=WLAN, 6=EUTRAN, 8=NR.
+Default: UNKNOWN.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Example 2: Multi-Condition Logic</div>
+            <div class="card-body">
+                <p><strong>Add this to the end of the prompt:</strong></p>
+                <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
+Determine retarget address for announcement routing.
+Input: ResultCode (Long) and CoreAnnouncementCode (Long).
+Output: RetargetAddress (String).
+If result code is 4012 AND announcement code is 1934, set address to "8321".
+If result code is 4012 AND announcement code is 1935, set address to "8322".
+Otherwise set address to "8342".</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Example 3: Roaming Detection</div>
+            <div class="card-body">
+                <p><strong>Add this to the end of the prompt:</strong></p>
+                <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
+Determine if subscriber is roaming by comparing serving network identity
+with home network identity.
+Input: servingMccMnc (String), homeMccMnc (String).
+Output: roamingPosition (String).
+If they match: HOME. Otherwise: ROAMING.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Example 4: Complex AVP Processing with COBA Lookup</div>
+            <div class="card-body">
+                <p><strong>Add this to the end of the prompt:</strong></p>
+                <div class="prompt-box" style="max-height:200px">MY REQUIREMENT:
+Extract subscriber location from User-Location-Info AVP (OctetString).
+Decode the AVP, extract MCC, MNC and TAC values.
+Combine MCC and MNC into PLMN.
+Lookup the TAC in COBA table "TACLocationMapping" to get the city/region.
+If lookup succeeds, set subscriberLocation to the matched value.
+If AVP is not present, set subscriberLocation to "Not Available".
+Default to "Unknown".</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Example 5: CDR Suppression Logic</div>
+            <div class="card-body">
+                <p><strong>Add this to the end of the prompt:</strong></p>
+                <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
+Suppress the first update CDR record to avoid duplicate billing.
+Input: requestType (Integer), requestNumber (Integer).
+Output: suppressCDR (String).
+If requestType is 1 (update) and requestNumber is 1 (first update),
+suppress by setting suppressCDR to "true".
+Otherwise set to "false".</div>
+            </div>
+        </div>
+
+        <h2>&#128161; Tips</h2>
+        <ol>
+            <li><strong>Be specific about data types</strong> - say "Long" or "Integer" or "String" explicitly</li>
+            <li><strong>Name parameters clearly</strong> - use CamelCase without spaces</li>
+            <li><strong>Specify exit behavior</strong> - tell the AI which rules should stop processing</li>
+            <li><strong>Always include a default</strong> - prevents undefined outputs in CHA</li>
+            <li><strong>For COBA lookups</strong> - mention the table name, key parameter, and column name</li>
+            <li><strong>Keep it simple</strong> - one rule per condition, the tool handles the nesting</li>
+        </ol>
+    </div>
+
+    <script>
+        function copyPrompt() {
+            const text = document.getElementById('mainPrompt').textContent.replace('📋 Copy', '').trim();
+            navigator.clipboard.writeText(text);
+            document.querySelector('.copy-btn').textContent = '✓ Copied!';
+            setTimeout(() => document.querySelector('.copy-btn').textContent = '📋 Copy', 2000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+Function: DetermineServiceScenario
+
+Input: serviceType (Long), roleOfNode (Integer)
+Output: serviceScenario (String)
+
+If serviceType equals 6 then set serviceScenario to Forwarding and exit
+If roleOfNode is 0 then set serviceScenario to MobileOriginating and exit
+If roleOfNode is 1 then set serviceScenario to MobileTerminating and exit
+Default set serviceScenario to Unknown

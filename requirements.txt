@@ -1,0 +1,7 @@
+# CHA Configuration Compiler
+# No external dependencies required for core functionality.
+# Standard library only: xml, zipfile, json, hashlib, argparse
+
+# Optional: for PDF documentation reading during development
+PyPDF2>=3.0
+pymupdf>=1.20

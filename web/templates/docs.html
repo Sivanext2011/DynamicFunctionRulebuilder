@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - CHA Dynamic Function Compiler</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #333; line-height: 1.6; }
+        .header { background: #1a237e; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 1.4rem; font-weight: 500; }
+        .header nav a { color: #bbdefb; text-decoration: none; margin-left: 1.5rem; font-size: 0.95rem; }
+        .header nav a:hover { color: white; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+        h2 { color: #1a237e; margin: 2rem 0 1rem; font-size: 1.3rem; border-bottom: 2px solid #e8eaf6; padding-bottom: 0.5rem; }
+        h3 { color: #283593; margin: 1.5rem 0 0.75rem; font-size: 1.1rem; }
+        p { margin: 0.5rem 0; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin: 1rem 0; overflow: hidden; }
+        .card-header { background: #e8eaf6; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.9rem; color: #1a237e; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .card-header:hover { background: #c5cae9; }
+        .card-body { padding: 1rem; }
+        pre { background: #263238; color: #eeffff; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; margin: 0.5rem 0; }
+        code { background: #e8eaf6; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        th, td { border: 1px solid #e0e0e0; padding: 0.5rem 0.75rem; text-align: left; }
+        th { background: #e8eaf6; font-weight: 600; }
+        .try-btn { background: #1a237e; color: white; border: none; padding: 0.3rem 0.7rem; border-radius: 3px; cursor: pointer; font-size: 0.75rem; }
+        .try-btn:hover { background: #283593; }
+        .tag { display: inline-block; background: #e8eaf6; color: #1a237e; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin: 0.1rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#9881; CHA Dynamic Function Compiler - Documentation</h1>
+        <nav>
+            <a href="/">Compiler</a>
+            <a href="/docs">Documentation</a>
+            <a href="/prompt">AI Prompt Template</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h2>Overview</h2>
+        <p>This tool converts plain English rules into Ericsson CHA Dynamic Function import packages. The workflow is:</p>
+        <pre>English Rules → DSL Code → XML → CHA Import ZIP</pre>
+
+        <h2>English Syntax Reference</h2>
+
+        <h3>Function Declaration</h3>
+        <pre>Function: MyFunctionName</pre>
+
+        <h3>Parameters</h3>
+        <table>
+            <tr><th>Syntax</th><th>Example</th></tr>
+            <tr><td><code>Input: name (type), name2 (type)</code></td><td><code>Input: serviceType (Long), roleOfNode (Integer)</code></td></tr>
+            <tr><td><code>Output: name (type)</code></td><td><code>Output: serviceScenario (String)</code></td></tr>
+            <tr><td><code>Internal: name (type)</code></td><td><code>Internal: tempValue (String)</code></td></tr>
+        </table>
+
+        <h3>Supported Data Types</h3>
+        <table>
+            <tr><th>You can write</th><th>Maps to</th></tr>
+            <tr><td><code>String</code>, <code>Str</code>, <code>Text</code></td><td>String</td></tr>
+            <tr><td><code>Integer</code>, <code>Int</code></td><td>IntegerNumber</td></tr>
+            <tr><td><code>Long</code></td><td>LongNumber</td></tr>
+            <tr><td><code>Boolean</code>, <code>Bool</code></td><td>Boolean</td></tr>
+            <tr><td><code>StringList</code></td><td>StringList</td></tr>
+            <tr><td><code>OctetString</code>, <code>Octet</code></td><td>OctetString</td></tr>
+            <tr><td><code>DateTime</code></td><td>DateTime</td></tr>
+            <tr><td><code>Measurement</code></td><td>Measurement</td></tr>
+        </table>
+
+        <h3>Rules</h3>
+        <table>
+            <tr><th>Pattern</th><th>Example</th></tr>
+            <tr><td>Simple condition + action</td><td><code>If serviceType is 6 then set scenario to Forwarding</code></td></tr>
+            <tr><td>Multiple conditions (AND)</td><td><code>If x is 1 and y is 2 then set z to value</code></td></tr>
+            <tr><td>With exit</td><td><code>If x is 1 then set y to hello and exit</code></td></tr>
+            <tr><td>Not equal</td><td><code>If status is not 0 then set error to true</code></td></tr>
+            <tr><td>Default/fallback</td><td><code>Otherwise set result to default</code></td></tr>
+            <tr><td>Default (alt)</td><td><code>Default set result to unknown</code></td></tr>
+        </table>
+
+        <h3>Condition Keywords</h3>
+        <p>These are all equivalent: <code>is</code>, <code>equals</code>, <code>=</code>, <code>is equal to</code></p>
+        <p>For not-equal: <code>is not</code>, <code>!=</code>, <code>not equals</code></p>
+
+        <h2>Examples from Production CHA Systems</h2>
+
+        <div class="card">
+            <div class="card-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <span>Example 1: Determine Service Scenario (MMTel/Voice)</span>
+                <button class="try-btn" onclick="event.stopPropagation();tryExample(1)">Try it →</button>
+            </div>
+            <div class="card-body">
+                <p><span class="tag">Voice</span> <span class="tag">IMS</span> <span class="tag">Routing</span></p>
+                <p>Determines the service scenario based on service type and role of node for IMS voice calls.</p>
+<pre>Function: DetermineServiceScenarioMMTel
+
+Input: ServiceType (Long), RoleOfNode (Integer)
+Output: ServiceScenario (String)
+
+If ServiceType is 6 then set ServiceScenario to Forwarding and exit
+If RoleOfNode is 0 then set ServiceScenario to MobileOriginating and exit
+If RoleOfNode is 1 then set ServiceScenario to MobileTerminating and exit
+Default set ServiceScenario to Unknown</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <span>Example 2: Determine Retarget Address (Announcement Routing)</span>
+                <button class="try-btn" onclick="event.stopPropagation();tryExample(2)">Try it →</button>
+            </div>
+            <div class="card-body">
+                <p><span class="tag">Announcement</span> <span class="tag">Retarget</span> <span class="tag">Error Handling</span></p>
+                <p>Routes to different announcement addresses based on result code and announcement code.</p>
+<pre>Function: DetermineRetargetAddress
+
+Input: ResultCode (Long), CoreAnnouncementCode (Long)
+Output: RetargetAddress (String)
+
+If ResultCode is 4012 and CoreAnnouncementCode is 1934 then set RetargetAddress to 8321 and exit
+Otherwise set RetargetAddress to 8342</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <span>Example 3: Normalize Roaming Position</span>
+                <button class="try-btn" onclick="event.stopPropagation();tryExample(3)">Try it →</button>
+            </div>
+            <div class="card-body">
+                <p><span class="tag">Roaming</span> <span class="tag">MCC/MNC</span> <span class="tag">Location</span></p>
+                <p>Determines roaming position by comparing serving and home MCC/MNC values.</p>
+<pre>Function: DetermineRoamingPosition
+
+Input: servingMccMnc (String), homeMccMnc (String)
+Output: roamingPosition (String)
+
+If servingMccMnc equals homeMccMnc then set roamingPosition to HOME and exit
+Default set roamingPosition to ROAMING</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <span>Example 4: Determine Charging Profile</span>
+                <button class="try-btn" onclick="event.stopPropagation();tryExample(4)">Try it →</button>
+            </div>
+            <div class="card-body">
+                <p><span class="tag">Charging</span> <span class="tag">Rating</span> <span class="tag">Multi-output</span></p>
+                <p>Assigns charging profile, rating group and service identifier based on service type and role.</p>
+<pre>Function: DetermineChargingProfile
+
+Input: serviceType (Long), roleOfNode (Integer), roamingIndicator (Boolean)
+Output: chargingProfile (String), ratingGroup (Integer), serviceIdentifier (String)
+
+If roamingIndicator is 1 then set chargingProfile to RoamingDefault and exit
+If serviceType is 6 then set chargingProfile to Forwarding and exit
+If serviceType is 10 then set chargingProfile to SMS and exit
+If roleOfNode is 0 then set chargingProfile to MobileOriginating and exit
+If roleOfNode is 1 then set chargingProfile to MobileTerminating and exit
+Default set chargingProfile to Default</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <span>Example 5: Suppress First Update CDR</span>
+                <button class="try-btn" onclick="event.stopPropagation();tryExample(5)">Try it →</button>
+            </div>
+            <div class="card-body">
+                <p><span class="tag">CDR</span> <span class="tag">Suppress</span> <span class="tag">Session</span></p>
+                <p>Determines whether to suppress the first update CDR based on request type.</p>
+<pre>Function: SuppressFirstUpdateCDR
+
+Input: requestType (Integer), requestNumber (Integer)
+Output: suppressCDR (String)
+
+If requestType is 1 and requestNumber is 1 then set suppressCDR to true and exit
+Default set suppressCDR to false</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <span>Example 6: Map RAT Type</span>
+                <button class="try-btn" onclick="event.stopPropagation();tryExample(6)">Try it →</button>
+            </div>
+            <div class="card-body">
+                <p><span class="tag">RAT</span> <span class="tag">Network</span> <span class="tag">5G/4G/3G/2G</span></p>
+                <p>Maps Radio Access Technology type code to human-readable network type.</p>
+<pre>Function: MapRATType
+
+Input: ratType (Integer)
+Output: networkType (String)
+
+If ratType is 1 then set networkType to UTRAN and exit
+If ratType is 2 then set networkType to GERAN and exit
+If ratType is 3 then set networkType to WLAN and exit
+If ratType is 6 then set networkType to EUTRAN and exit
+If ratType is 8 then set networkType to NR and exit
+If ratType is 9 then set networkType to EUTRA-NR and exit
+Default set networkType to UNKNOWN</pre>
+            </div>
+        </div>
+
+        <h2>DSL Syntax Reference</h2>
+        <p>If you prefer writing DSL directly, here's the syntax:</p>
+<pre>FUNCTION FunctionName
+
+INPUT
+    paramName : DataType
+
+OUTPUT
+    paramName : DataType
+
+INTERNAL
+    paramName : DataType
+
+RULE
+
+IF variable == value
+    SET target = "stringValue"
+    SET target = 123
+    EXIT
+
+IF EXISTS variable
+    IF variable == value
+        SET target = "result"
+        EXIT
+
+SET target = "defaultValue"</pre>
+
+        <h3>DSL Conditions</h3>
+        <table>
+            <tr><th>DSL</th><th>Meaning</th></tr>
+            <tr><td><code>IF variable == value</code></td><td>Compare equal</td></tr>
+            <tr><td><code>IF variable != value</code></td><td>Compare not equal</td></tr>
+            <tr><td><code>IF variable > value</code></td><td>Greater than</td></tr>
+            <tr><td><code>IF EXISTS variable</code></td><td>Check parameter exists</td></tr>
+            <tr><td><code>IF NOT variable</code></td><td>Boolean false check</td></tr>
+            <tr><td><code>IF LOOKUP table="..." column="..." key=param search=EXACT_MATCH</code></td><td>COBA table lookup</td></tr>
+        </table>
+
+        <h3>DSL Modifiers</h3>
+        <table>
+            <tr><th>DSL</th><th>CHA Element</th></tr>
+            <tr><td><code>SET target = value</code></td><td>SetDataModifier</td></tr>
+            <tr><td><code>EXIT</code></td><td>ExitModifier</td></tr>
+            <tr><td><code>BREAK</code></td><td>BreakIterationModifier</td></tr>
+        </table>
+    </div>
+
+    <script>
+        const examples = {
+            1: `Function: DetermineServiceScenarioMMTel\n\nInput: ServiceType (Long), RoleOfNode (Integer)\nOutput: ServiceScenario (String)\n\nIf ServiceType is 6 then set ServiceScenario to Forwarding and exit\nIf RoleOfNode is 0 then set ServiceScenario to MobileOriginating and exit\nIf RoleOfNode is 1 then set ServiceScenario to MobileTerminating and exit\nDefault set ServiceScenario to Unknown`,
+            2: `Function: DetermineRetargetAddress\n\nInput: ResultCode (Long), CoreAnnouncementCode (Long)\nOutput: RetargetAddress (String)\n\nIf ResultCode is 4012 and CoreAnnouncementCode is 1934 then set RetargetAddress to 8321 and exit\nOtherwise set RetargetAddress to 8342`,
+            3: `Function: DetermineRoamingPosition\n\nInput: servingMccMnc (String), homeMccMnc (String)\nOutput: roamingPosition (String)\n\nIf servingMccMnc equals homeMccMnc then set roamingPosition to HOME and exit\nDefault set roamingPosition to ROAMING`,
+            4: `Function: DetermineChargingProfile\n\nInput: serviceType (Long), roleOfNode (Integer), roamingIndicator (Boolean)\nOutput: chargingProfile (String), ratingGroup (Integer), serviceIdentifier (String)\n\nIf roamingIndicator is 1 then set chargingProfile to RoamingDefault and exit\nIf serviceType is 6 then set chargingProfile to Forwarding and exit\nIf serviceType is 10 then set chargingProfile to SMS and exit\nIf roleOfNode is 0 then set chargingProfile to MobileOriginating and exit\nIf roleOfNode is 1 then set chargingProfile to MobileTerminating and exit\nDefault set chargingProfile to Default`,
+            5: `Function: SuppressFirstUpdateCDR\n\nInput: requestType (Integer), requestNumber (Integer)\nOutput: suppressCDR (String)\n\nIf requestType is 1 and requestNumber is 1 then set suppressCDR to true and exit\nDefault set suppressCDR to false`,
+            6: `Function: MapRATType\n\nInput: ratType (Integer)\nOutput: networkType (String)\n\nIf ratType is 1 then set networkType to UTRAN and exit\nIf ratType is 2 then set networkType to GERAN and exit\nIf ratType is 3 then set networkType to WLAN and exit\nIf ratType is 6 then set networkType to EUTRAN and exit\nIf ratType is 8 then set networkType to NR and exit\nIf ratType is 9 then set networkType to EUTRA-NR and exit\nDefault set networkType to UNKNOWN`
+        };
+
+        function tryExample(n) {
+            // Store in sessionStorage and redirect
+            sessionStorage.setItem('example', examples[n]);
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Function: DetermineRetargetAddress
+
+Input: Result-Code (Long), Core-Announcement-Code (Long)
+Output: Retarget-Address (String)
+
+If Result-Code is 4012 and Core-Announcement-Code is 1934 then set Retarget-Address to 8321 and exit
+Otherwise set Retarget-Address to 8342

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHA Dynamic Function Compiler</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #333; }
+        .header { background: #1a237e; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 1.4rem; font-weight: 500; }
+        .header nav a { color: #bbdefb; text-decoration: none; margin-left: 1.5rem; font-size: 0.95rem; }
+        .header nav a:hover { color: white; }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .panel { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .panel-header { background: #e8eaf6; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.9rem; color: #1a237e; display: flex; align-items: center; justify-content: space-between; }
+        .panel-body { padding: 1rem; }
+        textarea { width: 100%; min-height: 250px; border: 1px solid #e0e0e0; border-radius: 4px; padding: 0.75rem; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; resize: vertical; line-height: 1.5; }
+        textarea:focus { outline: none; border-color: #1a237e; box-shadow: 0 0 0 2px rgba(26,35,126,0.1); }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: #1a237e; color: white; }
+        .btn-primary:hover { background: #283593; }
+        .btn-success { background: #2e7d32; color: white; }
+        .btn-success:hover { background: #388e3c; }
+        .btn-outline { background: white; color: #1a237e; border: 1px solid #1a237e; }
+        .btn-outline:hover { background: #e8eaf6; }
+        .actions { display: flex; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; align-items: center; }
+        .output-area { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; padding: 0.75rem; font-family: 'Consolas', monospace; font-size: 0.82rem; white-space: pre-wrap; min-height: 250px; max-height: 500px; overflow-y: auto; line-height: 1.5; }
+        .error { color: #c62828; background: #ffebee; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem; font-size: 0.85rem; }
+        .success { color: #2e7d32; background: #e8f5e9; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem; font-size: 0.85rem; }
+        .step-indicator { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .step { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; }
+        .step.active { background: #1a237e; color: white; }
+        .step.done { background: #2e7d32; color: white; }
+        .step.pending { background: #e0e0e0; color: #666; }
+        .step-line { width: 40px; height: 2px; background: #e0e0e0; }
+        .step-label { font-size: 0.8rem; color: #666; margin-left: 0.25rem; }
+        .version-input { padding: 0.4rem 0.6rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.85rem; width: 80px; }
+        .full-width { grid-column: 1 / -1; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#9881; CHA Dynamic Function Compiler</h1>
+        <nav>
+            <a href="/">Compiler</a>
+            <a href="/docs">Documentation</a>
+            <a href="/prompt">AI Prompt Template</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="step-indicator">
+            <div class="step active" id="s1">1</div><span class="step-label">English</span>
+            <div class="step-line"></div>
+            <div class="step pending" id="s2">2</div><span class="step-label">DSL</span>
+            <div class="step-line"></div>
+            <div class="step pending" id="s3">3</div><span class="step-label">XML</span>
+            <div class="step-line"></div>
+            <div class="step pending" id="s4">4</div><span class="step-label">Download</span>
+        </div>
+
+        <!-- COBA Lookup Modal -->
+        <div id="cobaModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+            <div style="background:white;border-radius:8px;padding:1.5rem;max-width:550px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+                <h3 style="color:#1a237e;margin-bottom:1rem">&#128269; COBA Table Lookup Details</h3>
+                <p style="font-size:0.85rem;color:#666;margin-bottom:1rem">Your rule requires a Global Table lookup. Please provide the COBA table details:</p>
+                <div style="margin-bottom:0.75rem">
+                    <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:0.25rem">Global List Specification Name</label>
+                    <input type="text" id="cobaSpec" placeholder="e.g. MapMCCMNCToZone" style="width:100%;padding:0.5rem;border:1px solid #e0e0e0;border-radius:4px;font-size:0.85rem">
+                </div>
+                <div style="margin-bottom:0.75rem">
+                    <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:0.25rem">Global List Name</label>
+                    <input type="text" id="cobaList" placeholder="e.g. MapMCCMNCToZone" style="width:100%;padding:0.5rem;border:1px solid #e0e0e0;border-radius:4px;font-size:0.85rem">
+                </div>
+                <div style="margin-bottom:0.75rem">
+                    <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:0.25rem">Column to Search</label>
+                    <input type="text" id="cobaColumn" placeholder="e.g. MCCMNC" style="width:100%;padding:0.5rem;border:1px solid #e0e0e0;border-radius:4px;font-size:0.85rem">
+                </div>
+                <div style="margin-bottom:0.75rem">
+                    <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:0.25rem">Key Parameter (variable to use as lookup key)</label>
+                    <input type="text" id="cobaKey" placeholder="e.g. tmpMCC" style="width:100%;padding:0.5rem;border:1px solid #e0e0e0;border-radius:4px;font-size:0.85rem">
+                </div>
+                <div style="margin-bottom:0.75rem">
+                    <label style="font-size:0.85rem;font-weight:500;display:block;margin-bottom:0.25rem">Search Type</label>
+                    <select id="cobaSearchType" style="width:100%;padding:0.5rem;border:1px solid #e0e0e0;border-radius:4px;font-size:0.85rem">
+                        <option value="EXACT_MATCH">EXACT_MATCH</option>
+                        <option value="BEST_MATCH">BEST_MATCH</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:1rem">
+                    <button class="btn btn-primary" onclick="insertCOBA()">Insert LOOKUP</button>
+                    <button class="btn btn-outline" onclick="closeCOBA()">Cancel</button>
+                </div>
+                <p style="font-size:0.75rem;color:#888;margin-top:0.75rem">URI will be formed as: rmref://coba/globalListSpecification/<b>{spec}</b>/globalList/<b>{list}</b></p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>&#9997; English Rules</span>
+                    <button class="btn btn-outline" onclick="loadExample()" style="font-size:0.75rem;padding:0.3rem 0.6rem">Load Example</button>
+                </div>
+                <div class="panel-body">
+                    <textarea id="englishInput" placeholder="Enter your rules in plain English...
+
+Example:
+Function: DetermineRetargetAddress
+Input: Result-Code (Long), Core-Announcement-Code (Long)
+Output: Retarget-Address (String)
+
+If Result-Code is 4012 and Core-Announcement-Code is 1934 then set Retarget-Address to 8321 and exit
+Otherwise set Retarget-Address to 8342"></textarea>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="convertToDSL()">Convert to DSL &rarr;</button>
+                        <button class="btn btn-outline" onclick="openCOBA()" title="Add a COBA table lookup condition">&#128269; Add COBA Lookup</button>
+                    </div>
+                    <div id="convertError"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><span>&#128196; Generated DSL</span></div>
+                <div class="panel-body">
+                    <div class="output-area" id="dslOutput" contenteditable="true" spellcheck="false">DSL will appear here...</div>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="compileDSL()">Compile to XML &rarr;</button>
+                        <button class="btn btn-outline" onclick="copyDSL()">Copy DSL</button>
+                    </div>
+                    <div id="compileError"></div>
+                </div>
+            </div>
+
+            <div class="panel full-width">
+                <div class="panel-header"><span>&#128230; XML Preview & Download</span></div>
+                <div class="panel-body">
+                    <div class="output-area" id="xmlOutput" style="max-height:300px">XML preview will appear here...</div>
+                    <div class="actions">
+                        <label style="font-size:0.85rem">Version:</label>
+                        <input type="text" class="version-input" id="versionInput" value="1.0.0">
+                        <button class="btn btn-success" onclick="downloadZip()">&#11015; Download CHA ZIP</button>
+                    </div>
+                    <div id="downloadMsg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setStep(n) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('s' + i);
+                el.className = 'step ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+            }
+        }
+
+        async function convertToDSL() {
+            const text = document.getElementById('englishInput').value;
+            const cobaLookups = window.cobaLookups || [];
+            document.getElementById('convertError').innerHTML = '';
+            const res = await fetch('/api/convert', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text, cobaLookups})
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('dslOutput').textContent = data.dsl;
+                setStep(2);
+                window.cobaLookups = [];  // reset after use
+            } else {
+                document.getElementById('convertError').innerHTML = '<div class="error">' + data.error + '</div>';
+            }
+        }
+
+        async function compileDSL() {
+            const dsl = document.getElementById('dslOutput').textContent;
+            document.getElementById('compileError').innerHTML = '';
+            const res = await fetch('/api/compile', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({dsl})
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('xmlOutput').textContent = data.xml;
+                setStep(3);
+            } else {
+                document.getElementById('compileError').innerHTML = '<div class="error">' + data.error + '</div>';
+            }
+        }
+
+        async function downloadZip() {
+            const dsl = document.getElementById('dslOutput').textContent;
+            const version = document.getElementById('versionInput').value;
+            document.getElementById('downloadMsg').innerHTML = '';
+            const res = await fetch('/api/download', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({dsl, version})
+            });
+            const data = await res.json();
+            if (data.success) {
+                const bytes = atob(data.zip_b64);
+                const arr = new Uint8Array(bytes.length);
+                for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                const blob = new Blob([arr], {type: 'application/zip'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = data.filename; a.click();
+                URL.revokeObjectURL(url);
+                setStep(4);
+                document.getElementById('downloadMsg').innerHTML = '<div class="success">&#10003; Downloaded: ' + data.filename + '</div>';
+            } else {
+                document.getElementById('downloadMsg').innerHTML = '<div class="error">' + data.error + '</div>';
+            }
+        }
+
+        function copyDSL() {
+            const text = document.getElementById('dslOutput').textContent;
+            navigator.clipboard.writeText(text);
+        }
+
+        function loadExample() {
+            document.getElementById('englishInput').value = `Function: DetermineRetargetAddress
+
+Input: Result-Code (Long), Core-Announcement-Code (Long)
+Output: Retarget-Address (String)
+
+If Result-Code is 4012 and Core-Announcement-Code is 1934 then set Retarget-Address to 8321 and exit
+Otherwise set Retarget-Address to 8342`;
+        }
+
+        function openCOBA() {
+            document.getElementById('cobaModal').style.display = 'flex';
+        }
+
+        function closeCOBA() {
+            document.getElementById('cobaModal').style.display = 'none';
+        }
+
+        function insertCOBA() {
+            const spec = document.getElementById('cobaSpec').value.trim();
+            const list = document.getElementById('cobaList').value.trim();
+            const column = document.getElementById('cobaColumn').value.trim();
+            const key = document.getElementById('cobaKey').value.trim();
+            const searchType = document.getElementById('cobaSearchType').value;
+
+            if (!spec || !list || !column || !key) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const lookupLine = `Check against table ${spec} using ${key} column ${column}`;
+            const textarea = document.getElementById('englishInput');
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            const insert = (pos > 0 && text[pos-1] !== '\n' ? '\n' : '') + lookupLine + '\n';
+            textarea.value = text.substring(0, pos) + insert + text.substring(pos);
+            textarea.selectionStart = textarea.selectionEnd = pos + insert.length;
+            textarea.focus();
+
+            // Store the full URI info for DSL generation
+            if (!window.cobaLookups) window.cobaLookups = [];
+            window.cobaLookups.push({spec, list, column, key, searchType});
+
+            closeCOBA();
+            // Clear inputs for next use
+            document.getElementById('cobaSpec').value = '';
+            document.getElementById('cobaList').value = '';
+            document.getElementById('cobaColumn').value = '';
+            document.getElementById('cobaKey').value = '';
+        }
+
+        // Load example from docs page
+        window.addEventListener('load', function() {
+            const ex = sessionStorage.getItem('example');
+            if (ex) {
+                document.getElementById('englishInput').value = ex;
+                sessionStorage.removeItem('example');
+            }
+        });
+    </script>
+</body>
+</html>
