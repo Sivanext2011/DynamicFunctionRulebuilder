@@ -21,7 +21,7 @@ Modifiers:
     REPLACE <source> <regex> WITH <replacement> INTO <target>  → ReplaceStringModifier
     LENGTH <source> INTO <target>    → LengthModifier
     MATH <target> = <left> <op> <right>  → BasicMathModifier
-    CONCAT <source1> <source2> INTO <target>  → AddStringModifier
+    CONCAT <source1>, <source2> INTO <target>  → AddStringModifier (2 inputs only)
     ENUMERATE <source> INTO <target> → EnumerationModifier
     LOOKUP_SET table=".." column=".." key=<p> result=<col> target=<t> default=<d>  → GlobalTableQueryModifier
 """
@@ -87,7 +87,7 @@ class DSLParser:
             if line in ("INPUT", "OUTPUT", "INTERNAL", "RULE", "DESCRIPTION") or line.startswith("FUNCTION "):
                 break
             # "name : Type" or "name : Type [List]"
-            m = re.match(r'^(\w+)\s*:\s*(\w+)(?:\s*\[(\w+)\])?$', line)
+            m = re.match(r'^([\w.\-]+)\s*:\s*(\w+)(?:\s*\[(\w+)\])?$', line)
             if m:
                 name, dtype, coll = m.group(1), m.group(2), m.group(3)
                 try:
@@ -404,16 +404,27 @@ class DSLParser:
                        ])
 
     def _parse_concat(self, line):
-        """CONCAT <source1> <source2> INTO <target>"""
-        m = re.match(r'^CONCAT\s+(\w+)\s+(\w+)\s+INTO\s+(\w+)$', line, re.IGNORECASE)
+        """CONCAT <source>, <addString> INTO <target> (2 inputs only, matches CHA AddStringModifier)"""
+        m = re.match(r'^CONCAT\s+(.+?)\s+INTO\s+([\w.\-]+)$', line, re.IGNORECASE)
         if not m:
-            raise DSLParseError(f"Invalid CONCAT: {line}. Expected: CONCAT source1 source2 INTO target")
-        return Modifier(name=f"Concat into {m.group(3)}", modifier_type="AddStringModifier",
-                       properties=[
-                           Property(name="Source1", type="value", data_definition_name=m.group(1)),
-                           Property(name="Source2", type="value", data_definition_name=m.group(2)),
-                           Property(name="Target", type="value", data_definition_name=m.group(3)),
-                       ])
+            raise DSLParseError(f"Invalid CONCAT: {line}. Expected: CONCAT source, addString INTO target")
+        sources_str, target = m.group(1).strip(), m.group(2)
+        # Split by comma
+        parts = [p.strip() for p in re.split(r',', sources_str) if p.strip()]
+        # Fallback: if no commas, split by space (legacy: CONCAT a b INTO t)
+        if len(parts) == 1 and not parts[0].startswith('"'):
+            parts = sources_str.split()
+        if len(parts) != 2:
+            raise DSLParseError(f"Invalid CONCAT: {line}. CHA AddStringModifier takes exactly 2 sources, got {len(parts)}")
+        props = []
+        for i, part in enumerate(parts, 1):
+            name = "SourceString" if i == 1 else "AddString"
+            if (part.startswith('"') and part.endswith('"')) or (part.startswith("'") and part.endswith("'")):
+                props.append(Property(name=name, type="value", constant_value=part[1:-1], constant_data_type=DataType.String))
+            else:
+                props.append(Property(name=name, type="value", data_definition_name=part))
+        props.append(Property(name="TargetString", type="value", data_definition_name=target))
+        return Modifier(name=f"Concat into {target}", modifier_type="AddStringModifier", properties=props)
 
     def _parse_enumerate(self, line):
         """ENUMERATE <source> INTO <target>"""
@@ -430,19 +441,21 @@ class DSLParser:
         """LOOKUP_SET table="..." column="..." key=<p> result=<col> target=<t> [default=<d>]"""
         attrs = dict(re.findall(r'(\w+)\s*=\s*"([^"]+)"', line))
         for m_iter in re.finditer(r'(\w+)\s*=\s*([^\s"]+)', line):
-            if m_iter.group(1) not in attrs and m_iter.group(1) != "LOOKUP_SET":
+            if m_iter.group(1) not in attrs and m_iter.group(1) not in ("LOOKUP_SET",):
                 attrs[m_iter.group(1)] = m_iter.group(2)
+        key_val = attrs.get("key", "")
+        target_val = attrs.get("target", "")
         props = [
             Property(name="Table", type="value", constant_value=attrs.get("table", ""), constant_data_type=DataType.String),
             Property(name="ColumnToSearch", type="value", constant_value=attrs.get("column", ""), constant_data_type=DataType.String),
-            Property(name="Key", type="value", data_definition_name=attrs.get("key", "")),
+            Property(name="Key", type="value", data_definition_name=key_val),
             Property(name="ColumnToReturn", type="value", constant_value=attrs.get("result", ""), constant_data_type=DataType.String),
-            Property(name="Target", type="value", data_definition_name=attrs.get("target", "")),
+            Property(name="Target", type="value", data_definition_name=target_val),
             Property(name="SearchType", type="", constant_value=attrs.get("search", "EXACT_MATCH")),
         ]
         if "default" in attrs:
             props.append(Property(name="DefaultValue", type="value", constant_value=attrs["default"], constant_data_type=DataType.String))
-        return Modifier(name=f"Lookup and set {attrs.get('target','')}", modifier_type="GlobalTableQueryModifier", properties=props)
+        return Modifier(name=f"Lookup and set {target_val}", modifier_type="GlobalTableQueryModifier", properties=props)
 
     def _parse_octet_hex(self, line):
         """OCTET_TO_HEX <source> INTO <target> / HEX_TO_OCTET <source> INTO <target>"""

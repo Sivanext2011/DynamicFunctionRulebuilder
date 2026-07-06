@@ -204,22 +204,26 @@ class NLToDSL:
         conditions = []
         for part in parts:
             part = part.strip()
+            # Match: var exists / var is present
+            if re.match(r'([A-Za-z_][\w-]*)\s+(?:exists|is\s+present)', part, re.IGNORECASE):
+                var = re.match(r'([A-Za-z_][\w-]*)', part).group(1).replace("-", "")
+                conditions.append({"var": var, "op": "exists", "value": None})
+            # Match: var is not present
+            elif re.match(r'([A-Za-z_][\w-]*)\s+(?:is\s+not\s+present|does\s+not\s+exist)', part, re.IGNORECASE):
+                var = re.match(r'([A-Za-z_][\w-]*)', part).group(1).replace("-", "")
+                conditions.append({"var": var, "op": "not_exists", "value": None})
+            # Match: var is not / != value
+            elif re.match(r'([A-Za-z_][\w-]*)\s+(?:is\s+not|!=|not\s+equals?)\s+(.+)$', part, re.IGNORECASE):
+                m2 = re.match(r'([A-Za-z_][\w-]*)\s+(?:is\s+not|!=|not\s+equals?)\s+(.+)$', part, re.IGNORECASE)
+                conditions.append({"var": m2.group(1).replace("-", ""), "op": "!=", "value": m2.group(2).strip()})
             # Match: var is/equals/==/= value
-            m = re.match(r'([A-Za-z_][\w-]*)\s+(?:is|equals?|==?|is equal to)\s+(.+)$', part, re.IGNORECASE)
-            if m:
+            elif re.match(r'([A-Za-z_][\w-]*)\s+(?:is|equals?|==?|is\s+equal\s+to)\s+(.+)$', part, re.IGNORECASE):
+                m = re.match(r'([A-Za-z_][\w-]*)\s+(?:is|equals?|==?|is\s+equal\s+to)\s+(.+)$', part, re.IGNORECASE)
                 var = m.group(1).strip().replace("-", "")
                 val = m.group(2).strip()
                 conditions.append({"var": var, "op": "==", "value": val})
-            # Match: var exists
-            elif re.match(r'([A-Za-z_][\w-]*)\s+exists', part, re.IGNORECASE):
-                var = re.match(r'([A-Za-z_][\w-]*)', part).group(1).replace("-", "")
-                conditions.append({"var": var, "op": "exists", "value": None})
-            # Match: var != value
-            elif re.match(r'([A-Za-z_][\w-]*)\s+(?:is not|!=|not equals?)\s+(.+)$', part, re.IGNORECASE):
-                m2 = re.match(r'([A-Za-z_][\w-]*)\s+(?:is not|!=|not equals?)\s+(.+)$', part, re.IGNORECASE)
-                conditions.append({"var": m2.group(1).replace("-", ""), "op": "!=", "value": m2.group(2).strip()})
             else:
-                raise NLParseError(f"Cannot parse condition: '{part}'. Expected format: 'variable is value' or 'variable equals value'")
+                raise NLParseError(f"Cannot parse condition: '{part}'. Expected format: 'variable is value' or 'variable exists'")
         return conditions
 
     def _parse_actions(self, action_str: str) -> list[dict]:

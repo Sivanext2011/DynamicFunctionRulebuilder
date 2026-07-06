@@ -85,14 +85,20 @@ class Validator:
                         f"Condition '{node.condition.name}' references undefined parameter: {prop.data_definition_name}"
                     ))
 
-        for mod in node.modifiers:
+        all_mods = node.modifiers
+        all_children = node.children
+        if node.elements:
+            all_mods = [e for e in node.elements if isinstance(e, Modifier)]
+            all_children = [e for e in node.elements if isinstance(e, Node)]
+
+        for mod in all_mods:
             for prop in mod.properties:
                 if prop.data_definition_name and prop.data_definition_name not in param_names:
                     errors.append(ValidationError(
                         f"Modifier '{mod.name}' references undefined parameter: {prop.data_definition_name}"
                     ))
 
-        for child in node.children:
+        for child in all_children:
             self._validate_node_refs(child, param_names, errors)
 
     def _collect_used_params(self, node: Node, used: set[str]):
@@ -108,12 +114,25 @@ class Validator:
             self._collect_used_params(child, used)
 
     def _collect_set_targets(self, node: Node, targets: set[str]):
-        for mod in node.modifiers:
+        all_mods = node.modifiers
+        if node.elements:
+            all_mods = [e for e in node.elements if isinstance(e, Modifier)]
+        for mod in all_mods:
             if mod.modifier_type == "SetDataModifier":
                 target = next((p for p in mod.properties if p.name == "Target"), None)
                 if target and target.data_definition_name:
                     targets.add(target.data_definition_name)
-        for child in node.children:
+            elif mod.modifier_type in ("AddStringModifier", "GlobalTableQueryModifier", "SubstringModifier",
+                                       "SplitStringModifier", "ConvertDataTypeModifier", "ReplaceStringModifier",
+                                       "LengthModifier", "BasicMathModifier", "EnumerationModifier",
+                                       "GlobalTableMultipleColumnQueryModifier"):
+                target = next((p for p in mod.properties if p.name in ("Target", "TargetString")), None)
+                if target and target.data_definition_name:
+                    targets.add(target.data_definition_name)
+        all_children = node.children
+        if node.elements:
+            all_children = [e for e in node.elements if isinstance(e, Node)]
+        for child in all_children:
             self._collect_set_targets(child, targets)
 
     def _check_coba_uris(self, node: Node, warnings: list[ValidationWarning]):

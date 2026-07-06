@@ -76,45 +76,77 @@ FORMAT RULES:
 3. Output: "Output: &lt;name&gt; (&lt;type&gt;)"
 4. Internal (if needed): "Internal: &lt;name&gt; (&lt;type&gt;)"
 5. Rules: One rule per line starting with "If"
-6. Conditions use: "is", "equals", "is not"
+6. Conditions use: "is", "equals", "is not", "is present", "is not present"
 7. Multiple conditions: "and" between them on same line
 8. Actions: "then set &lt;target&gt; to &lt;value&gt;"
 9. Exit: append "and exit" to stop processing
 10. Default: "Default set &lt;target&gt; to &lt;value&gt;"
+11. Concatenation: "Concatenate &lt;source&gt; and &lt;addString&gt; into &lt;target&gt;" (ONLY 2 inputs per step)
+12. COBA Lookup: "Lookup &lt;key&gt; in table &lt;TableName&gt; column &lt;col&gt;, set &lt;resultCol&gt; to &lt;target&gt;"
+
+PARAMETER NAMING:
+- Names can contain letters, digits, underscores, hyphens, and dots
+- Use EXACT CHA parameter names (e.g., Ericsson-Location-MCC-MNC, plmnId.mcc)
 
 AVAILABLE DATA TYPES:
-String, Integer, Long, Boolean, StringList, OctetString, DateTime, Measurement
+String, IntegerNumber, LongNumber, Boolean, StringList, IntegerNumberList,
+LongNumberList, OctetString, DateTime, Measurement, Enumerated, AddressString
 
 CONDITION PATTERNS:
 - "If &lt;variable&gt; is &lt;value&gt; then ..."
 - "If &lt;variable&gt; is not &lt;value&gt; then ..."
 - "If &lt;var1&gt; is &lt;val1&gt; and &lt;var2&gt; is &lt;val2&gt; then ..."
 - "If &lt;variable&gt; is present" (existence check)
+- "If &lt;variable&gt; is not present" (non-existence check)
 
-FOR COMPLEX OPERATIONS:
-- "Decode the &lt;AVP&gt;" (converts OctetString to String)
-- "Split &lt;source&gt; by &lt;delimiter&gt;" (splits string into list)
-- "Extract the &lt;field&gt;" (substring extraction)
-- "Combine &lt;x&gt; and &lt;y&gt; to form &lt;z&gt;" (concatenation)
-- For COBA table lookups use EXACTLY this format:
-  "Check against table &lt;TableName&gt; using &lt;keyParam&gt; column &lt;columnName&gt;"
-  Where:
-    - TableName = the globalListSpecification name in CHA
-    - keyParam = the internal/input parameter holding the lookup key value
-    - columnName = the column in the COBA table to search
-  The user will provide exact table names via a form in the tool.
+ACTION PATTERNS:
+- "set &lt;target&gt; to &lt;value&gt;" (assign value)
+- "Concatenate &lt;source&gt; and &lt;addString&gt; into &lt;target&gt;" (ONLY 2 inputs per step)
+- "Lookup &lt;key&gt; in table &lt;Table&gt; column &lt;col&gt;, set &lt;resultCol&gt; to &lt;target&gt;" (COBA lookup)
+- "Split &lt;source&gt; by '&lt;delimiter&gt;' into &lt;target&gt;" (split string)
+- "Convert &lt;source&gt; to &lt;target&gt;" (type conversion)
+
+IMPORTANT - CONCATENATION RULES:
+CHA AddStringModifier takes ONLY 2 inputs per operation (source + addString -&gt; target).
+To join multiple parts (e.g., MCC + "-" + MNC), use multiple steps:
+  "Set LocationMCCMNC to Mcc"
+  "Concatenate LocationMCCMNC and '-' into LocationMCCMNC"
+  "Concatenate LocationMCCMNC and Mnc into LocationMCCMNC"
+Each step appends ONE value. Never put 3+ sources in one concatenate.
+
+COBA TABLE LOOKUP FORMAT:
+"Lookup &lt;keyParam&gt; in table &lt;TableName&gt; column &lt;searchColumn&gt;, set &lt;returnColumn&gt; to &lt;targetParam&gt;"
+For multiple columns from same table, write one Lookup line per result column.
+
+ENUMERATED TYPES:
+- Always use numeric values in conditions (0, 1, 2...), NOT string labels
 
 EXAMPLE OUTPUT:
 ---
 Function: DetermineServiceScenario
 
-Input: serviceType (Long), roleOfNode (Integer)
+Input: serviceType (LongNumber), roleOfNode (IntegerNumber)
 Output: serviceScenario (String)
 
 If serviceType is 6 then set serviceScenario to Forwarding and exit
 If roleOfNode is 0 then set serviceScenario to MobileOriginating and exit
 If roleOfNode is 1 then set serviceScenario to MobileTerminating and exit
 Default set serviceScenario to Unknown
+---
+
+EXAMPLE WITH CONCAT AND LOOKUP:
+---
+Function: DetermineRoamingZone
+
+Input: Mcc (String), Mnc (String)
+Output: LocationMCCMNC (String), roamingZone (String)
+
+Set roamingZone to Unknown
+Set LocationMCCMNC to Mcc
+Concatenate LocationMCCMNC and '-' into LocationMCCMNC
+Concatenate LocationMCCMNC and Mnc into LocationMCCMNC
+Lookup LocationMCCMNC in table GL_MccMncToZone_data column MCCMNC, set ZoneGroup to roamingZone
+Exit
 ---
 
 IMPORTANT: Output ONLY the function definition text. No explanations, no markdown, no code blocks.
@@ -132,76 +164,89 @@ MY REQUIREMENT:
                 <p><strong>Add this to the end of the prompt:</strong></p>
                 <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
 Map Radio Access Technology code to network type string.
-Input: ratType (Integer). Output: networkType (String).
+Input: ratType (IntegerNumber). Output: networkType (String).
 Mappings: 1=UTRAN, 2=GERAN, 3=WLAN, 6=EUTRAN, 8=NR.
 Default: UNKNOWN.</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">Example 2: Multi-Condition Logic</div>
+            <div class="card-header">Example 2: Concatenation with Separator (2 steps)</div>
             <div class="card-body">
                 <p><strong>Add this to the end of the prompt:</strong></p>
                 <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
-Determine retarget address for announcement routing.
-Input: ResultCode (Long) and CoreAnnouncementCode (Long).
-Output: RetargetAddress (String).
-If result code is 4012 AND announcement code is 1934, set address to "8321".
-If result code is 4012 AND announcement code is 1935, set address to "8322".
-Otherwise set address to "8342".</div>
+Input: Mcc (String), Mnc (String).
+Output: LocationMCCMNC (String).
+Concatenate Mcc, a hyphen, and Mnc into LocationMCCMNC.
+Use multiple steps since CHA only allows 2 inputs per concat.</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">Example 3: Roaming Detection</div>
+            <div class="card-header">Example 3: COBA Table Lookup with Default</div>
             <div class="card-body">
                 <p><strong>Add this to the end of the prompt:</strong></p>
-                <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
-Determine if subscriber is roaming by comparing serving network identity
-with home network identity.
-Input: servingMccMnc (String), homeMccMnc (String).
-Output: roamingPosition (String).
-If they match: HOME. Otherwise: ROAMING.</div>
+                <div class="prompt-box" style="max-height:180px">MY REQUIREMENT:
+Input: LocationMCCMNC (String).
+Outputs: roamingCountry (String), roamingZone (String).
+Lookup LocationMCCMNC in global list GL_MccMncToZone_data,
+search column MCCMNC with exact match.
+Set Country column to roamingCountry, ZoneGroup column to roamingZone.
+Default both to "Unknown" if no match.</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">Example 4: Complex AVP Processing with COBA Lookup</div>
+            <div class="card-header">Example 4: Multi-Condition with Existence Check</div>
+            <div class="card-body">
+                <p><strong>Add this to the end of the prompt:</strong></p>
+                <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
+Input: anncid (LongNumber), Result-Code (LongNumber).
+Output: resultCode (LongNumber).
+If anncid is present and anncid is 6705, set resultCode to 4800 and exit.
+If Result-Code is present, set resultCode to Result-Code and exit.
+Default resultCode to 0.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Example 5: Complex AVP Processing with COBA Lookup</div>
             <div class="card-body">
                 <p><strong>Add this to the end of the prompt:</strong></p>
                 <div class="prompt-box" style="max-height:200px">MY REQUIREMENT:
 Extract subscriber location from User-Location-Info AVP (OctetString).
 Decode the AVP, extract MCC, MNC and TAC values.
-Combine MCC and MNC into PLMN.
-Lookup the TAC in COBA table "TACLocationMapping" to get the city/region.
-If lookup succeeds, set subscriberLocation to the matched value.
+Combine MCC and MNC into PLMN (use 2-step concat).
+Lookup the TAC in COBA table "TACLocationMapping" column TAC,
+set Region to subscriberLocation.
 If AVP is not present, set subscriberLocation to "Not Available".
 Default to "Unknown".</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">Example 5: CDR Suppression Logic</div>
+            <div class="card-header">Example 6: CDR Suppression Logic</div>
             <div class="card-body">
                 <p><strong>Add this to the end of the prompt:</strong></p>
                 <div class="prompt-box" style="max-height:150px">MY REQUIREMENT:
 Suppress the first update CDR record to avoid duplicate billing.
-Input: requestType (Integer), requestNumber (Integer).
+Input: requestType (IntegerNumber), requestNumber (IntegerNumber).
 Output: suppressCDR (String).
-If requestType is 1 (update) and requestNumber is 1 (first update),
-suppress by setting suppressCDR to "true".
+If requestType is 1 and requestNumber is 1, set suppressCDR to "true" and exit.
 Otherwise set to "false".</div>
             </div>
         </div>
 
         <h2>&#128161; Tips</h2>
         <ol>
-            <li><strong>Be specific about data types</strong> - say "Long" or "Integer" or "String" explicitly</li>
-            <li><strong>Name parameters clearly</strong> - use CamelCase without spaces</li>
+            <li><strong>Use correct CHA data types</strong> - IntegerNumber, LongNumber, String (not Integer/Long)</li>
+            <li><strong>Parameter names support hyphens and dots</strong> - e.g., Ericsson-Location-MCC-MNC, plmnId.mcc</li>
+            <li><strong>Concatenation is 2 inputs ONLY</strong> - use multiple steps to join 3+ parts (set first, then append each)</li>
             <li><strong>Specify exit behavior</strong> - tell the AI which rules should stop processing</li>
             <li><strong>Always include a default</strong> - prevents undefined outputs in CHA</li>
-            <li><strong>For COBA lookups</strong> - mention the table name, key parameter, and column name</li>
-            <li><strong>Keep it simple</strong> - one rule per condition, the tool handles the nesting</li>
+            <li><strong>For COBA lookups</strong> - specify table name, key param, search column, result column, and target</li>
+            <li><strong>Enumerated types use integers</strong> - compare with 0, 1, 2... not string labels</li>
+            <li><strong>One lookup per result column</strong> - for multiple outputs from same table, write one line each</li>
         </ol>
     </div>
 

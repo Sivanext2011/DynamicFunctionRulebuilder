@@ -278,8 +278,10 @@ class AdvancedNLToDSL(NLToDSL):
             lower = line.lower()
 
         # Check for existence pattern: "if X is not present" / "if X is present"
+        # But ONLY if the line does NOT have "then" (action on same line)
+        # If it has "then", it's a complete single-line rule - delegate to _parse_rule
         m = re.match(r'if\s+(\w[\w-]*)\s+is\s+(?:not\s+)?present', lower)
-        if m:
+        if m and 'then' not in lower:
             var = re.match(r'if\s+(\w[\w-]*)', line, re.IGNORECASE).group(1).replace("-", "")
             is_negated = "not" in lower
             if is_negated:

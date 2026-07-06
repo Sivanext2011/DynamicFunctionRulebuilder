@@ -219,13 +219,13 @@ class DSLDecompiler:
             t = target.data_definition_name if target else "?"
             lines.append(f"{prefix}MATH {t} = {l} {o} {r}")
         elif mt == "AddStringModifier":
-            s1 = self._get_prop(mod.properties, "Source1") or self._get_prop(mod.properties, "Source")
-            s2 = self._get_prop(mod.properties, "Source2")
-            target = self._get_prop(mod.properties, "Target")
-            a = s1.data_definition_name if s1 else "?"
-            b = s2.data_definition_name if s2 else "?"
+            s1 = self._get_prop(mod.properties, "SourceString") or self._get_prop(mod.properties, "Source1") or self._get_prop(mod.properties, "Source")
+            s2 = self._get_prop(mod.properties, "AddString") or self._get_prop(mod.properties, "Source2")
+            target = self._get_prop(mod.properties, "TargetString") or self._get_prop(mod.properties, "Target")
+            a = self._value_to_dsl(s1) if s1 else "?"
+            b = self._value_to_dsl(s2) if s2 else "?"
             t = target.data_definition_name if target else "?"
-            lines.append(f"{prefix}CONCAT {a} {b} INTO {t}")
+            lines.append(f"{prefix}CONCAT {a}, {b} INTO {t}")
         elif mt == "EnumerationModifier":
             source = self._get_prop(mod.properties, "Source")
             target = self._get_prop(mod.properties, "Target")
