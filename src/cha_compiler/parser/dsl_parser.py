@@ -267,12 +267,15 @@ class DSLParser:
             return self._parse_lookup_condition(m.group(1).strip(), func)
 
         # Comparison
-        m = re.match(r'^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$', expr)
+        m = re.match(r'^([\w.\-]+)\s*(==|!=|>=|<=|>|<|ENDS_WITH|STARTS_WITH|CONTAINS)\s*(.+)$', expr, re.IGNORECASE)
         if m:
-            var_name, op_str, value = m.group(1), m.group(2), m.group(3).strip()
+            var_name, op_str, value = m.group(1), m.group(2).upper(), m.group(3).strip()
             op_map = {"==": CompareOperator.EQ, "!=": CompareOperator.NEQ,
                       ">": CompareOperator.GT, ">=": CompareOperator.GTE,
-                      "<": CompareOperator.LT, "<=": CompareOperator.LTE}
+                      "<": CompareOperator.LT, "<=": CompareOperator.LTE,
+                      "ENDS_WITH": CompareOperator.ENDS_WITH,
+                      "STARTS_WITH": CompareOperator.STARTS_WITH,
+                      "CONTAINS": CompareOperator.CONTAINS}
             compare_to_prop = self._parse_value_expression(value, func)
             compare_to_prop.name = "SourceDataCompareTo"
             return Condition(name=f"When {var_name} {op_str} {value}", condition_type="CompareDataCondition",

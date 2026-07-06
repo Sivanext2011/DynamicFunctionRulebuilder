@@ -36,6 +36,9 @@ class CompareOperator(Enum):
     GTE = "GTE"
     LT = "LT"
     LTE = "LTE"
+    ENDS_WITH = "Ends_with_ignore_case"
+    STARTS_WITH = "Starts_with_ignore_case"
+    CONTAINS = "Contains_ignore_case"
 
 
 @dataclass

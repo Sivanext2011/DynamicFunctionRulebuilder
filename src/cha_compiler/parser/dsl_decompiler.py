@@ -110,7 +110,9 @@ class DSLDecompiler:
             compare_to = self._get_prop(cond.properties, "SourceDataCompareTo")
             if source and operator and compare_to:
                 var_name = source.data_definition_name or "?"
-                op_map = {"EQ": "==", "NEQ": "!=", "GT": ">", "GTE": ">=", "LT": "<", "LTE": "<="}
+                op_map = {"EQ": "==", "NEQ": "!=", "GT": ">", "GTE": ">=", "LT": "<", "LTE": "<=",
+                          "Ends_with_ignore_case": "ENDS_WITH", "Starts_with_ignore_case": "STARTS_WITH",
+                          "Contains_ignore_case": "CONTAINS"}
                 op_str = op_map.get(operator.constant_value, "==")
                 value = self._value_to_dsl(compare_to)
                 return f"{var_name} {op_str} {value}"
@@ -130,7 +132,9 @@ class DSLDecompiler:
             compare = self._get_prop(cond.properties, "CompareValue")
             if data_prop and operator and compare:
                 var = data_prop.data_definition_name or "?"
-                op_map = {"EQ": "==", "NEQ": "!=", "GT": ">", "GTE": ">=", "LT": "<", "LTE": "<="}
+                op_map = {"EQ": "==", "NEQ": "!=", "GT": ">", "GTE": ">=", "LT": "<", "LTE": "<=",
+                          "Ends_with_ignore_case": "ENDS_WITH", "Starts_with_ignore_case": "STARTS_WITH",
+                          "Contains_ignore_case": "CONTAINS"}
                 op_str = op_map.get(operator.constant_value, "==")
                 val = compare.constant_value or "?"
                 return f"LENGTH {var} {op_str} {val}"
