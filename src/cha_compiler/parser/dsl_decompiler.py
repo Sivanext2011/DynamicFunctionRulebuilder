@@ -241,7 +241,7 @@ class DSLDecompiler:
             col = self._get_prop(mod.properties, "ColumnToSearch")
             key = self._get_prop(mod.properties, "Key")
             result = self._get_prop(mod.properties, "ColumnToReturn")
-            target = self._get_prop(mod.properties, "Target")
+            target = self._get_prop(mod.properties, "Output") or self._get_prop(mod.properties, "Target")
             search = self._get_prop(mod.properties, "SearchType")
             default = self._get_prop(mod.properties, "DefaultValue")
             parts = [f'LOOKUP_SET table="{table.constant_value if table else "?"}"']

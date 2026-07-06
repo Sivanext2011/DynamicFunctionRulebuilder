@@ -126,7 +126,7 @@ class Validator:
                                        "SplitStringModifier", "ConvertDataTypeModifier", "ReplaceStringModifier",
                                        "LengthModifier", "BasicMathModifier", "EnumerationModifier",
                                        "GlobalTableMultipleColumnQueryModifier"):
-                target = next((p for p in mod.properties if p.name in ("Target", "TargetString")), None)
+                target = next((p for p in mod.properties if p.name in ("Target", "TargetString", "Output")), None)
                 if target and target.data_definition_name:
                     targets.add(target.data_definition_name)
         all_children = node.children

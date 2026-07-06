@@ -451,13 +451,12 @@ class DSLParser:
         props = [
             Property(name="Table", type="value", constant_value=attrs.get("table", ""), constant_data_type=DataType.String),
             Property(name="ColumnToSearch", type="value", constant_value=attrs.get("column", ""), constant_data_type=DataType.String),
-            Property(name="Key", type="value", data_definition_name=key_val),
             Property(name="ColumnToReturn", type="value", constant_value=attrs.get("result", ""), constant_data_type=DataType.String),
-            Property(name="Target", type="value", data_definition_name=target_val),
+            Property(name="Key", type="value", data_definition_name=key_val),
+            Property(name="DefaultValue", type="value", constant_value=attrs.get("default", ""), constant_data_type=DataType.String),
             Property(name="SearchType", type="", constant_value=attrs.get("search", "EXACT_MATCH")),
+            Property(name="Output", type="value", data_definition_name=target_val),
         ]
-        if "default" in attrs:
-            props.append(Property(name="DefaultValue", type="value", constant_value=attrs["default"], constant_data_type=DataType.String))
         return Modifier(name=f"Lookup and set {target_val}", modifier_type="GlobalTableQueryModifier", properties=props)
 
     def _parse_octet_hex(self, line):

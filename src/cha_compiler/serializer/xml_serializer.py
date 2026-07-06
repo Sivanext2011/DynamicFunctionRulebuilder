@@ -82,7 +82,10 @@ class XmlSerializer:
             self._build_property(mod_el, prop, func)
 
     def _build_property(self, parent_el: ET.Element, prop: Property, func: DynamicFunction):
-        prop_el = ET.SubElement(parent_el, "Property", name=prop.name, type=prop.type)
+        attrs = {"name": prop.name}
+        if prop.type:
+            attrs["type"] = prop.type
+        prop_el = ET.SubElement(parent_el, "Property", **attrs)
 
         if prop.data_definition_name:
             dd_el = ET.SubElement(prop_el, "DataDefinition", name=prop.data_definition_name)
@@ -94,14 +97,14 @@ class XmlSerializer:
         elif prop.constant_value is not None:
             if prop.constant_data_type:
                 const_el = ET.SubElement(prop_el, "Constant", dataType=prop.constant_data_type.value)
-                const_el.text = prop.constant_value
-            elif prop.type == "":
-                # Inline text property (like Operator)
+                const_el.text = prop.constant_value if prop.constant_value else None
+            elif not prop.type:
+                # Inline text property (like Operator, SearchType)
                 prop_el.text = prop.constant_value
             else:
                 data_type = self._resolve_constant_type(prop, func)
                 const_el = ET.SubElement(prop_el, "Constant", dataType=data_type.value)
-                const_el.text = prop.constant_value
+                const_el.text = prop.constant_value if prop.constant_value else None
 
     def _resolve_constant_type(self, prop: Property, func: DynamicFunction) -> DataType:
         if prop.constant_data_type:
