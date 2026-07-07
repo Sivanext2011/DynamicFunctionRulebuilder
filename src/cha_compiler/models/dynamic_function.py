@@ -25,7 +25,7 @@ class DataType(Enum):
 class ParameterTemplate(Enum):
     InputParameter = "InputParameter"
     OutputParameter = "OutputParameter"
-    InternalParameter = "InternalParameter"
+    InternalParameter = "FunctionTemp"
     FunctionTemp = "FunctionTemp"
 
 
